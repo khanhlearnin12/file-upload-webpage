@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>File Upload</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    h1 {
+      color: #333;
+    }
+    form {
+      margin-bottom: 20px;
+    }
+    input[type="file"] {
+      margin-right: 10px;
+    }
+    #uploadStatus {
+      margin-top: 20px;
+      font-size: 1.2em;
+    }
+  </style>
+</head>
+<body>
+  <h1>Upload a File</h1>
+  <form id="uploadForm" enctype="multipart/form-data">
+    <input type="file" id="fileInput" name="file" required>
+    <button type="submit">Upload</button>
+  </form>
+  <div id="uploadStatus"></div>
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const fileInput = document.getElementById('fileInput');
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+
+        fetch('/upload', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('uploadStatus').textContent = data.message;
+        })
+        .catch(error => {
+            document.getElementById('uploadStatus').textContent = 'Error uploading file.';
+            console.error('Error:', error);
+        });
+        });
+
+        // server.js
+        const express = require('express');
+        const multer = require('multer');
+        const app = express();
+        const port = 3000;
+
+        const storage = multer.diskStorage({
+          destination: function (req, file, cb) {
+            cb(null, 'uploads/');
+          },
+          filename: function (req, file, cb) {
+            cb(null, file.originalname);
+          }
+        });
+
+        const upload = multer({ storage: storage });
+
+        app.post('/upload', upload.single('file'), (req, res) => {
+          res.json({ message: 'File uploaded successfully!' });
+        });
+
+        app.listen(port, () => {
+          console.log(`Server running at http://localhost:${port}`);
+        });
+    </script>
+</body>
+</html>
