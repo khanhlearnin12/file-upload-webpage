@@ -4,10 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>File Upload</title>
-  <style>
+    <style>
     body {
       font-family: Arial, sans-serif;
-      background-color: #f4f4f4;
+      background-color: gray;
       margin: 0;
       padding: 20px;
       display: flex;
@@ -28,60 +28,96 @@
       margin-top: 20px;
       font-size: 1.2em;
     }
+
+    .history-box {
+      width: 80%;
+      max-width: 600px;
+      margin-top: 20px;
+      padding: 15px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      background-color: white;
+    }
+
+    .history-box h2 {
+      margin-top: 0;
+      color: #333;
+      font-size: 1.2em;
+    }
+
+    .history-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .history-item {
+      padding: 8px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .history-item:last-child {
+      border-bottom: none;
+    }
+
+
+
   </style>
 </head>
 <body>
-  <h1>Upload a File</h1>
-  <form id="uploadForm" enctype="multipart/form-data">
-    <input type="file" id="fileInput" name="file" required>
-    <button type="submit">Upload</button>
-  </form>
+  <h1 class="title" >Upload a File</h1>
   <div id="uploadStatus"></div>
-    <script>
-        document.getElementById('uploadForm').addEventListener('submit', function(event) {
-        event.preventDefault();
-        const fileInput = document.getElementById('fileInput');
-        const formData = new FormData();
-        formData.append('file', fileInput.files[0]);
+  <form action="upload.php" method="post" enctype="multipart/form-data">
+    Select image to upload:
+    <input type="file" name="fileToUpload" id="fileToUpload">
+    <input type="submit" value="Upload Image" name="submit">
+  </form>
 
-        fetch('/upload', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('uploadStatus').textContent = data.message;
-        })
-        .catch(error => {
-            document.getElementById('uploadStatus').textContent = 'Error uploading file.';
-            console.error('Error:', error);
-        });
-        });
+  <div class="history-box">
+    <h2>Upload History</h2>
+    <ul id="historyList" class="history-list"></ul>
+  </div>
 
-        // server.js
-        const express = require('express');
-        const multer = require('multer');
-        const app = express();
-        const port = 3000;
+  <script>
+    document.getElementById('uploadForm').addEventListener('submit', function(e) {
+      // Prevent the default form submission
+      e.preventDefault();
 
-        const storage = multer.diskStorage({
-          destination: function (req, file, cb) {
-            cb(null, 'uploads/');
-          },
-          filename: function (req, file, cb) {
-            cb(null, file.originalname);
-          }
-        });
+      const fileInput = document.getElementById('fileToUpload');
+      const fileName = fileInput.files[0]?.name || 'Unknown file';
+      const timestamp = new Date().toLocaleString();
 
-        const upload = multer({ storage: storage });
+      // Add to history
+      const historyList = document.getElementById('historyList');
+      const historyItem = document.createElement('li');
+      historyItem.className = 'history-item';
+      historyItem.textContent = `${fileName} - Uploaded at ${timestamp}`;
 
-        app.post('/upload', upload.single('file'), (req, res) => {
-          res.json({ message: 'File uploaded successfully!' });
-        });
+      // Add new item at the top of the list
+      historyList.insertBefore(historyItem, historyList.firstChild);
 
-        app.listen(port, () => {
-          console.log(`Server running at http://localhost:${port}`);
-        });
-    </script>
+      // Store in localStorage (optional, for persistence)
+      const history = JSON.parse(localStorage.getItem('uploadHistory') || '[]');
+      history.unshift({ fileName, timestamp });
+      localStorage.setItem('uploadHistory', JSON.stringify(history));
+
+      // Continue with the form submission
+      this.submit();
+    });
+
+    // Load history from localStorage on page load
+    window.addEventListener('load', function() {
+      const history = JSON.parse(localStorage.getItem('uploadHistory') || '[]');
+      const historyList = document.getElementById('historyList');
+
+      history.forEach(item => {
+        const historyItem = document.createElement('li');
+        historyItem.className = 'history-item';
+        historyItem.textContent = `${item.fileName} - Uploaded at ${item.timestamp}`;
+        historyList.appendChild(historyItem);
+      });
+    });
+  </script>
+
 </body>
 </html>
