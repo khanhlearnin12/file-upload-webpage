@@ -96,22 +96,8 @@
         const historyList = document.getElementById('historyList');
         const historyItem = document.createElement('li');
         historyItem.className = 'history-item';
+        historyItem.textContent = `${fileName} - Uploaded at ${timestamp}`;
 
-// Create a downloadable link using Blob URL
-        const file = fileInput.files[0];
-        const blobUrl = URL.createObjectURL(file);
-
-        const link = document.createElement('a');
-        link.href = blobUrl;
-        link.download = fileName;
-        link.textContent = fileName;
-        link.style.color = 'blue';
-        link.style.textDecoration = 'underline';
-        link.style.cursor = 'pointer';
-
-        historyItem.appendChild(link);
-        historyItem.appendChild(document.createTextNode(' - Uploaded at ${timestamp}'));
-        historyList.insertBefore(historyItem, historyList.firstChild);
         // Add new item at the top of the list
         historyList.insertBefore(historyItem, historyList.firstChild);
 
@@ -148,6 +134,13 @@
         historyList.appendChild(historyItem);
       });
     });
+
+
+    
+
+  
+    
+    
   </script>
 
 </body>
