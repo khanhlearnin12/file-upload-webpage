@@ -129,7 +129,7 @@
       history.forEach(item => {
         const historyItem = document.createElement('li');
         historyItem.className = 'history-item';
-        historyItem.textContent = `${item.fileName} - Uploaded at ${item.timestamp}`;
+        historyItem.textContent = `${item.fileName} - Uploaded at ${item.timestamp}`; // Use stored data
         historyList.appendChild(historyItem); // Add to the history list
       });
     });
