@@ -66,80 +66,59 @@
 </head>
 <body>
   <h1 class="title" >Upload a File</h1>
-  <div id="uploadStatus"></div>
-  <form id="uploadForm" action="index.html" method="post" enctype="multipart/form-data">
-    Select image to upload:
+  <form id="uploadForm" action="http://localhost:3000/upload" method="post" enctype="multipart/form-data">
+    Select file to upload:
     <input type="file" name="fileToUpload" id="fileToUpload">
-    <input type="submit" value="Upload Image" name="submit">
+    <input type="submit" value="Upload File" name="submit">
     <div id="errorStatus" style="color: red; margin-top: 10px;"></div>
   </form>
 
+  <div id="uploadStatus" style="margin-top: 20px;"></div>
+  <div id="downloadLink" style="margin-top: 10px;"></div>
+
   <div class="history-box">
     <h2>Upload History</h2>
-    <ul id="historyList" class="history-list"></ul>
+    <ul id="uploadHistory" class="history-list"></ul>
   </div>
 
   <script>
-    document.getElementById('uploadForm').addEventListener('submit', function(e) {
-      // Prevent the default form submission
+    document.getElementById('uploadForm').addEventListener('submit', async function (e) {
       e.preventDefault();
 
       const fileInput = document.getElementById('fileToUpload');
-      const fileName = fileInput.files[0]?.name || 'Unknown file';
-      const timestamp = new Date().toLocaleString();
+      const formData = new FormData();
+      formData.append('fileToUpload', fileInput.files[0]);
 
-      // Simulate file upload process
-      const uploadSuccess = Math.random() > 0.2; // 80% chance of success for simulation
+      try {
+        const response = await fetch('http://localhost:3000/upload', {
+          method: 'POST',
+          body: formData,
+        });
 
-      if (uploadSuccess) {
-        // Add to history
-        const historyList = document.getElementById('historyList');
-        const historyItem = document.createElement('li');
-        historyItem.className = 'history-item';
-        historyItem.textContent = `${fileName} - Uploaded at ${timestamp}`;
+        if (response.ok) {
+          const data = await response.json();
+          document.getElementById('uploadStatus').textContent = 'File uploaded successfully!';
+          document.getElementById('uploadStatus').style.color = 'green';
 
-        // Add new item at the top of the list
-        historyList.insertBefore(historyItem, historyList.firstChild);
+          // Display download link
+          const downloadLink = document.getElementById('downloadLink');
+          downloadLink.innerHTML = `<a href="${data.filePath}" download>Download ${data.fileName}</a>`;
 
-        // Store in localStorage (optional, for persistence)
-        const history = JSON.parse(localStorage.getItem('uploadHistory') || '[]');
-        history.unshift({ fileName, timestamp });
-        localStorage.setItem('uploadHistory', JSON.stringify(history));
-
-        // Display success message
-        document.getElementById('uploadStatus').textContent = 'File uploaded successfully!';
-        document.getElementById('uploadStatus').style.color = 'green';
-
-        // Clear error message
-        document.getElementById('errorStatus').textContent = ''; // Clear any previous error message
-        // Continue with the form submission
-        this.submit();
-      } else {
-        // Display error message below the upload button
-        document.getElementById('errorStatus').textContent = 'File uploading error';
-        document.getElementById('uploadStatus').textContent = '';
+          // Update upload history
+          const uploadHistory = document.getElementById('uploadHistory');
+          const historyItem = document.createElement('li');
+          historyItem.className = 'history-item';
+          historyItem.innerHTML = `<a href="${data.filePath}" download>${data.fileName}</a>`;
+          uploadHistory.appendChild(historyItem);
+        } else {
+          document.getElementById('uploadStatus').textContent = 'File upload failed.';
+          document.getElementById('uploadStatus').style.color = 'red';
+        }
+      } catch (error) {
+        document.getElementById('uploadStatus').textContent = 'An error occurred.';
+        document.getElementById('uploadStatus').style.color = 'red';
       }
     });
-
-    // Load history from localStorage on page load
-    window.addEventListener('load', function() {
-      const history = JSON.parse(localStorage.getItem('uploadHistory') || '[]');
-      const historyList = document.getElementById('historyList');
-
-      history.forEach(item => {
-        const historyItem = document.createElement('li');
-        historyItem.className = 'history-item';
-        historyItem.textContent = `${item.fileName} - Uploaded at ${item.timestamp}`; // Use stored data
-        historyList.appendChild(historyItem); // Add to the history list
-      });
-    });
-
-
-    
-
-  
-    
-    
   </script>
 </body>
 </html>
