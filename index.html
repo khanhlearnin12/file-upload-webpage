@@ -29,17 +29,24 @@
       font-size: 1.2em;
     }
 
-    .history-box {
-      width: 80%;
-      max-width: 600px;
-      margin-top: 20px;
+    .container {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: flex-start;
+      width: 100%;
+      max-width: 800px;
+    }
+
+    .history-box, .preview-box {
+      width: 48%;
       padding: 15px;
       border: 1px solid #ccc;
       border-radius: 5px;
       background-color: white;
     }
 
-    .history-box h2 {
+    .history-box h2, .preview-box h2 {
       margin-top: 0;
       color: #333;
       font-size: 1.2em;
@@ -60,8 +67,12 @@
       border-bottom: none;
     }
 
-
-
+    .preview-box img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
@@ -76,9 +87,16 @@
   <div id="uploadStatus" style="margin-top: 20px;"></div>
   <div id="downloadLink" style="margin-top: 10px;"></div>
 
-  <div class="history-box">
-    <h2>Upload History</h2>
-    <ul id="uploadHistory" class="history-list"></ul>
+  <div class="container">
+    <div class="history-box">
+      <h2>Upload History</h2>
+      <ul id="uploadHistory" class="history-list"></ul>
+    </div>
+
+    <div class="preview-box">
+      <h2>Uploaded File Preview</h2>
+      <div id="filePreview">No file uploaded yet.</div>
+    </div>
   </div>
 
   <script>
@@ -108,8 +126,19 @@
           const uploadHistory = document.getElementById('uploadHistory');
           const historyItem = document.createElement('li');
           historyItem.className = 'history-item';
-          historyItem.innerHTML = `<a href="${data.filePath}" download>${data.fileName}</a>`;
+          historyItem.innerHTML = `
+            <a href="${data.filePath}" download>${data.fileName}</a>
+            <span style="margin-left: 10px; color: gray;">(Uploaded at: ${new Date(data.uploadTime).toLocaleString()})</span>
+          `;
           uploadHistory.appendChild(historyItem);
+
+          // Show file preview
+          const filePreview = document.getElementById('filePreview');
+          if (data.fileName.match(/\.(jpg|jpeg|png|gif)$/i)) {
+            filePreview.innerHTML = `<img src="${data.filePath}" alt="${data.fileName}">`;
+          } else {
+            filePreview.textContent = `Uploaded file: ${data.fileName}`;
+          }
         } else {
           document.getElementById('uploadStatus').textContent = 'File upload failed.';
           document.getElementById('uploadStatus').style.color = 'red';
@@ -119,6 +148,29 @@
         document.getElementById('uploadStatus').style.color = 'red';
       }
     });
+
+    // Fetch upload history on page load
+    async function fetchUploadHistory() {
+      try {
+        const response = await fetch('http://localhost:3000/history');
+        if (response.ok) {
+          const history = await response.json();
+          const uploadHistory = document.getElementById('uploadHistory');
+          uploadHistory.innerHTML = ''; // Clear existing history
+          history.forEach(item => {
+            const historyItem = document.createElement('li');
+            historyItem.className = 'history-item';
+            historyItem.innerHTML = `
+              <a href="${item.filePath}" download>${item.fileName}</a>
+              <span style="margin-left: 10px; color: gray;">(Uploaded at: ${new Date(item.uploadTime).toLocaleString()})</span>
+            `;
+            uploadHistory.appendChild(historyItem);
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching upload history:', error);
+      }
+    }
   </script>
 </body>
 </html>
